@@ -25,6 +25,21 @@ class ScheduleDataManager:
 class ScheduleDataManager:
     """封装 ScheduleDB，提供按日期操作的接口，匹配现有 GUI 需求"""
 
+    def _normalize_time(self, time_str):
+        """将 '2026-6-1 9:5' 转为 '2026-06-01 09:05'"""
+        from datetime import datetime
+        # 先尝试直接解析，如果失败则拆开补零
+        try:
+            return datetime.strptime(time_str, '%Y-%m-%d %H:%M')
+        except ValueError:
+            parts = time_str.split(' ')
+            date_part = parts[0]
+            time_part = parts[1] if len(parts) > 1 else '00:00'
+            y, m, d = date_part.split('-')
+            h, mi = time_part.split(':')
+            fixed = f"{int(y):04d}-{int(m):02d}-{int(d):02d} {int(h):02d}:{int(mi):02d}"
+            return datetime.strptime(fixed, '%Y-%m-%d %H:%M')
+
     def __init__(self, db: ScheduleDB):
         self.db = db
 
@@ -40,13 +55,16 @@ class ScheduleDataManager:
 
     def get_by_date(self, date: str) -> list:
         """获取指定日期的所有日程，返回字典列表（便于列表控件显示）"""
-        # 这里暂用全量获取再过滤，如果数据量大可改为数据库层面范围查询
         all_schedules = self.db.get_all_schedules()
         result = []
         target = datetime.strptime(date, '%Y-%m-%d').date()
         for s in all_schedules:
             if s.start_time.date() == target:
-                result.append(s.to_dict())
+                d = s.to_dict()
+                # 为 schedule_list 控件补充必要的字段
+                d['time'] = d['start_time']  # 使用开始时间作为显示时间
+                d['remark'] = d.get('description', '') or ''
+                result.append(d)
         return result
 
     def add_item(self, date: str, item: dict):
