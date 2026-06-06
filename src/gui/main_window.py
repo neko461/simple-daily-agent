@@ -6,14 +6,14 @@ from gui.schedule_form import ScheduleForm
 from core.data_manager import ScheduleDataManager
 
 class MainWindow:
-    def __init__(self, root):
+    def __init__(self, root, db):
         self.root = root
         self.root.title("模块化日程管理系统")
         self.root.geometry("800x600")
         self.root.resizable(False, False)
 
         # 数据管理器
-        self.data_manager = ScheduleDataManager()
+        self.data_manager = ScheduleDataManager(db)
 
         # 创建界面
         self._create_top_bar()
