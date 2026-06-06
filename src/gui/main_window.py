@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
@@ -120,3 +121,9 @@ class MainWindow:
             self.data_manager.delete_item(date, idx)
             self.refresh_list()
             messagebox.showinfo("成功", "已删除")
+=======
+class MainWindow:
+    def __init__(self,root,db):
+        self.root=root
+        self.db=db
+>>>>>>> 8a8153947efdc4b6450ae42ba96c522c2648672d
