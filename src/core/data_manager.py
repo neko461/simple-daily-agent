@@ -1,4 +1,5 @@
 # core/data_manager.py
+from datetime import timedelta
 from db import ScheduleDB
 from models import Schedule
 from datetime import datetime
@@ -54,17 +55,24 @@ class ScheduleDataManager:
             return None, None
 
     def get_by_date(self, date: str) -> list:
-        """获取指定日期的所有日程，返回字典列表（便于列表控件显示）"""
+        """获取指定日期的所有日程（包含跨天日程）"""
         all_schedules = self.db.get_all_schedules()
         result = []
         target = datetime.strptime(date, '%Y-%m-%d').date()
+        # 第二天的 00:00 作为区间终点
+        next_day = target + timedelta(days=1)
+
         for s in all_schedules:
-            if s.start_time.date() == target:
+            # 检查日程是否覆盖了查询日期
+            # 条件：日程开始时间 < 查询日期的次日  且  日程结束时间 > 查询日期的开始
+            if s.start_time.date() < next_day and s.end_time.date() > target:
+                # 也可以写成：
+                # if s.start_time < datetime.combine(next_day, datetime.min.time()) and s.end_time > datetime.combine(target, datetime.min.time()):
                 d = s.to_dict()
-                # 为 schedule_list 控件补充必要的字段
-                d['time'] = d['start_time']  # 使用开始时间作为显示时间
+                d['time'] = d['start_time']
                 d['remark'] = d.get('description', '') or ''
                 result.append(d)
+
         return result
 
     def add_item(self, date: str, item: dict):
